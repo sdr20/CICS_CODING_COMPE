@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CICS Code Challenge</title>
+<link rel="stylesheet" href="/css/main.css" />
+<style>
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .entry-wrap {
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+  }
+  .glyph-row {
+    font-family: var(--mono);
+    color: var(--green-dim);
+    letter-spacing: 0.4em;
+    font-size: 13px;
+    margin-bottom: 18px;
+    opacity: 0.7;
+  }
+  .college {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    color: var(--text-1);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 38px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  h1 .accent { color: var(--green); text-shadow: var(--glow-green); }
+  .tagline {
+    font-family: var(--mono);
+    color: var(--text-1);
+    font-size: 14px;
+    line-height: 1.9;
+    margin: 18px 0 34px;
+  }
+  .tagline span { color: var(--cyan); }
+
+  .entry-card {
+    padding: 32px 28px;
+    text-align: left;
+  }
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--text-1);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .input-row {
+    display: flex;
+    align-items: center;
+    background: var(--bg-1);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input-row:focus-within {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(57,255,143,0.12);
+  }
+  .input-row .prompt { color: var(--green); font-family: var(--mono); margin-right: 4px; }
+  .input-row input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-0);
+    font-family: var(--mono);
+    font-size: 16px;
+    padding: 14px 6px;
+  }
+  .input-row input::placeholder { color: var(--text-2); }
+
+  #startBtn { width: 100%; margin-top: 18px; padding: 15px; font-size: 15px; }
+
+  .error-msg {
+    margin-top: 12px;
+    color: var(--red);
+    font-family: var(--mono);
+    font-size: 13px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  .admin-link {
+    display: block;
+    text-align: center;
+    margin-top: 26px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .admin-link a { color: var(--text-1); }
+  .admin-link a:hover { color: var(--cyan); }
+
+  .status-line {
+    margin-top: 22px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+  <div class="entry-wrap">
+    <div class="glyph-row">&lt;/&gt; { } 01 10 &gt;&gt; _</div>
+    <div class="college">College of Computing and Sciences</div>
+    <h1><span class="accent">CICS</span> CODE CHALLENGE</h1>
+    <div class="tagline">
+      <span>Test</span> Your Logic.<br/>
+      <span>Write</span> Your Answer.<br/>
+      <span>Beat</span> the Clock.
+    </div>
+
+    <div class="card entry-card">
+      <label for="username">Enter Username</label>
+      <div class="input-row">
+        <span class="prompt">&gt;</span>
+        <input id="username" type="text" placeholder="your_codename" maxlength="30" autocomplete="off" />
+      </div>
+      <button id="startBtn" class="btn btn-primary">
+        <span id="startBtnText">START COMPETITION</span>
+      </button>
+      <div id="errorMsg" class="error-msg"></div>
+    </div>
+
+    <div class="status-line" id="compStatusLine"></div>
+
+    <a class="admin-link" href="/admin">Admin access &rarr;</a>
+  </div>
+
+<script>
+  const usernameInput = document.getElementById('username');
+  const startBtn = document.getElementById('startBtn');
+  const startBtnText = document.getElementById('startBtnText');
+  const errorMsg = document.getElementById('errorMsg');
+  const compStatusLine = document.getElementById('compStatusLine');
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('show');
+  }
+  function clearError() {
+    errorMsg.classList.remove('show');
+  }
+
+  // If a session already exists (player refreshed this page), skip straight to the dashboard.
+  const savedPlayer = localStorage.getItem('ccs_player');
+  if (savedPlayer) {
+    window.location.href = '/player';
+  }
+
+  async function loadStatus() {
+    try {
+      const res = await fetch('/api/leaderboard');
+      const data = await res.json();
+      const status = data.competition ? data.competition.status : 'NOT_STARTED';
+      const labels = {
+        NOT_STARTED: ['pill-dim', 'Competition has not started yet — you can still register.'],
+        RUNNING: ['pill-green', 'Competition is LIVE right now.'],
+        PAUSED: ['pill-amber', 'Competition is currently paused.'],
+        ENDED: ['pill-red', 'Competition has ended.']
+      };
+      const [cls, text] = labels[status] || labels.NOT_STARTED;
+      compStatusLine.innerHTML = `<span class="pill ${cls}">${status.replace('_',' ')}</span> <span style="color:var(--text-2)">${text}</span>`;
+    } catch (e) { /* server may still be warming up */ }
+  }
+  loadStatus();
+
+  async function submitUsername() {
+    const username = usernameInput.value.trim();
+    clearError();
+    if (!username) {
+      showError('Username is required.');
+      return;
+    }
+
+    startBtn.disabled = true;
+    startBtnText.innerHTML = '<span class="spin"></span> Connecting...';
+
+    try {
+      const res = await fetch('/api/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || 'Something went wrong. Please try again.');
+        startBtn.disabled = false;
+        startBtnText.textContent = 'START COMPETITION';
+        return;
+      }
+
+      localStorage.setItem('ccs_player', JSON.stringify({ id: data.player.id, username: data.player.username }));
+      window.location.href = '/player';
+    } catch (e) {
+      showError('Could not reach the competition server. Check your connection.');
+      startBtn.disabled = false;
+      startBtnText.textContent = 'START COMPETITION';
+    }
+  }
+
+  startBtn.addEventListener('click', submitUsername);
+  usernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitUsername(); });
+  usernameInput.focus();
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Ranking — CICS Code Challenge</title>
+<link rel="stylesheet" href="/css/main.css" />
+<link rel="stylesheet" href="/css/admin.css" />
+<style>
+  .ranking-wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 60px; }
+  .ranking-header { text-align: center; margin-bottom: 26px; }
+  .ranking-header .back-link { display: inline-block; margin-top: 14px; font-family: var(--mono); font-size: 12.5px; color: var(--text-1); }
+</style>
+</head>
+<body>
+  <div class="ranking-wrap">
+    <div class="ranking-header">
+      <div class="brand-mark" style="font-size:18px;"><span class="brackets">&lt;/&gt;</span> CICS CODE CHALLENGE</div>
+      <h2 style="margin:8px 0 0;">Live Competition Ranking</h2>
+      <a class="back-link" href="/player">&larr; Back to my dashboard</a>
+    </div>
+    <div class="card section-card">
+      <div class="leaderboard-list" id="leaderboardList"><div class="empty-note">Loading ranking...</div></div>
+    </div>
+  </div>
+
+<script>
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+  function formatTime(totalSeconds) {
+    if (totalSeconds === null || totalSeconds === undefined) return '—';
+    const s = Math.max(0, Math.floor(totalSeconds));
+    const hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    return hh > 0 ? `${pad(hh)}:${pad(mm)}:${pad(ss)}` : `${pad(mm)}:${pad(ss)}`;
+  }
+  function render(rows) {
+    const container = document.getElementById('leaderboardList');
+    if (!rows || rows.length === 0) { container.innerHTML = '<div class="empty-note">No players yet.</div>'; return; }
+    const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+    container.innerHTML = rows.map((r) => `
+      <div class="lb-row ${r.rank <= 3 ? 'rank-' + r.rank : ''}">
+        <div class="lb-rank">${medals[r.rank] || r.rank}</div>
+        <div class="lb-name">${escapeHtml(r.username)}${r.current_level ? `<span style="color:var(--text-2); font-family:var(--mono); font-size:11px; margin-left:8px;">on level ${r.current_level}</span>` : ''}</div>
+        <div class="lb-levels">${r.completed_levels} completed</div>
+        <div class="lb-time">${formatTime(r.total_time_seconds)}</div>
+      </div>
+    `).join('');
+  }
+
+  fetch('/api/leaderboard').then(r => r.json()).then(d => render(d.leaderboard)).catch(() => {});
+
+  const source = new EventSource('/api/leaderboard/stream');
+  source.onmessage = (evt) => {
+    try { render(JSON.parse(evt.data)); } catch (e) { /* heartbeat */ }
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CICS Code Challenge — Admin</title>
+<link rel="stylesheet" href="/css/main.css" />
+<link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body class="admin-body">
+
+<!-- LOGIN SCREEN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="card login-card">
+    <div class="lock-icon">🔐</div>
+    <h2>Admin Access</h2>
+    <p>CICS Code Challenge — Competition Control</p>
+    <input id="adminPassword" type="password" placeholder="Admin password" autocomplete="off" />
+    <button id="loginBtn" class="btn btn-primary">LOG IN</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ADMIN SHELL -->
+<div id="adminShell" style="display:none;">
+  <div class="admin-topbar">
+    <div class="brand-mark"><span class="brackets">&lt;/&gt;</span> CICS CODE CHALLENGE <span style="color:var(--text-2); font-weight:400;">/ admin</span></div>
+    <button id="logoutBtn" class="btn btn-ghost">Log out</button>
+  </div>
+
+  <div class="admin-shell">
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="levels">Levels &amp; Questions</button>
+      <button class="tab-btn" data-tab="players">Players</button>
+      <button class="tab-btn" data-tab="ranking">Live Ranking</button>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stat-grid" id="statGrid"></div>
+
+      <div class="card control-panel">
+        <h3>Competition Control</h3>
+        <div class="status-sub">Current status: <span id="statusPill" class="pill pill-dim">—</span></div>
+        <div class="control-btn-row">
+          <button id="btnStart" class="btn btn-primary">START COMPETITION</button>
+          <button id="btnPause" class="btn btn-secondary">PAUSE COMPETITION</button>
+          <button id="btnResume" class="btn btn-secondary">RESUME</button>
+          <button id="btnEnd" class="btn btn-secondary">END COMPETITION</button>
+          <button id="btnReset" class="btn btn-danger">RESET COMPETITION</button>
+        </div>
+      </div>
+
+      <div class="card section-card">
+        <h3>Competition Statistics</h3>
+        <div class="stat-grid" id="statsGrid"></div>
+      </div>
+    </div>
+
+    <!-- LEVELS TAB -->
+    <div class="tab-panel" id="tab-levels">
+      <div class="two-col">
+        <div>
+          <div class="card section-card">
+            <h3>Levels</h3>
+            <div id="levelRows"></div>
+            <button id="newLevelBtn" class="btn btn-secondary" style="width:100%; margin-top:6px;">+ ADD LEVEL</button>
+          </div>
+
+          <div class="card section-card" id="levelFormCard" style="display:none;">
+            <h3 id="levelFormTitle">Edit Level</h3>
+            <div class="form-grid">
+              <div>
+                <label>Level Number</label>
+                <input type="number" id="levelNumberInput" min="1" />
+              </div>
+              <div>
+                <label>Title</label>
+                <input type="text" id="levelTitleInput" placeholder="e.g. Variables" />
+              </div>
+              <div>
+                <label>Description</label>
+                <textarea id="levelDescInput" placeholder="Short description of this level"></textarea>
+              </div>
+              <div class="control-btn-row">
+                <button id="saveLevelBtn" class="btn btn-primary">SAVE LEVEL</button>
+                <button id="cancelLevelBtn" class="btn btn-ghost">CANCEL</button>
+                <button id="deleteLevelBtn" class="btn btn-danger" style="display:none;">DELETE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card section-card">
+            <h3 id="questionsHeading">Questions</h3>
+            <div id="questionRows"><div class="empty-note">Select a level to manage its questions.</div></div>
+            <button id="newQuestionBtn" class="btn btn-secondary" style="width:100%; margin-top:6px; display:none;">+ ADD QUESTION</button>
+          </div>
+
+          <div class="card section-card" id="questionFormCard" style="display:none;">
+            <h3 id="questionFormTitle">Edit Question</h3>
+            <div class="form-grid">
+              <div>
+                <label>Question Title</label>
+                <input type="text" id="qTitleInput" placeholder="e.g. Basic Addition" />
+              </div>
+              <div>
+                <label>Programming Language</label>
+                <input type="text" id="qLangInput" placeholder="C++" value="C++" />
+              </div>
+              <div>
+                <label>Question Description</label>
+                <textarea id="qDescInput" placeholder="What is the output of this program?"></textarea>
+              </div>
+              <div>
+                <label>Code</label>
+                <textarea id="qCodeInput" class="mono" style="min-height:160px;" placeholder="#include <iostream>..."></textarea>
+              </div>
+              <div>
+                <label>Correct Answer</label>
+                <input type="text" id="qAnswerInput" placeholder="e.g. 15" />
+              </div>
+              <label class="checkbox-row"><input type="checkbox" id="qCaseSensitiveInput" /> Case sensitive matching</label>
+              <div class="control-btn-row">
+                <button id="saveQuestionBtn" class="btn btn-primary">SAVE QUESTION</button>
+                <button id="cancelQuestionBtn" class="btn btn-ghost">CANCEL</button>
+                <button id="deleteQuestionBtn" class="btn btn-danger" style="display:none;">DELETE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAYERS TAB -->
+    <div class="tab-panel" id="tab-players">
+      <div class="card section-card">
+        <h3>Active Players</h3>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Username</th><th>Current Level</th><th>Status</th><th>Time / Completed Levels</th></tr>
+            </thead>
+            <tbody id="playersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RANKING TAB -->
+    <div class="tab-panel" id="tab-ranking">
+      <div class="card section-card">
+        <h3>Live Competition Ranking</h3>
+        <div class="leaderboard-list" id="leaderboardList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESET CONFIRM MODAL -->
+<div class="modal-overlay" id="resetModal" style="display:none;">
+  <div class="card confirm-modal">
+    <div class="warn-icon">⚠</div>
+    <h2 style="margin:0 0 10px;">Reset Competition?</h2>
+    <p>Resetting the competition will delete all player progress, attempts, and completion times. Levels and questions will NOT be deleted.<br/><br/>Are you sure?</p>
+    <div class="btn-row">
+      <button id="cancelResetBtn" class="btn btn-ghost">CANCEL</button>
+      <button id="confirmResetBtn" class="btn btn-danger">RESET COMPETITION</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE LEVEL CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteLevelModal" style="display:none;">
+  <div class="card confirm-modal">
+    <div class="warn-icon">⚠</div>
+    <h2 style="margin:0 0 10px;">Delete Level?</h2>
+    <p>This will permanently delete the level and all of its questions and player progress for it.</p>
+    <div class="btn-row">
+      <button id="cancelDeleteLevelBtn" class="btn btn-ghost">CANCEL</button>
+      <button id="confirmDeleteLevelBtn" class="btn btn-danger">DELETE LEVEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

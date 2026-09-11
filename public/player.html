@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CICS Code Challenge — Player</title>
+<link rel="stylesheet" href="/css/main.css" />
+<link rel="stylesheet" href="/css/player.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand brand-mark">
+    <span class="brackets">&lt;/&gt;</span> CICS CODE CHALLENGE
+    <span class="sub">College of Computing and Sciences — Programming Competition</span>
+  </div>
+  <div class="topbar-right">
+    <div class="player-chip"><span class="dot">●</span><span id="chipUsername">—</span></div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: progress panel -->
+  <div class="card progress-panel">
+    <h3>Your Progress</h3>
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-count"><b id="progressCount">0</b> / <span id="progressTotal">0</span> levels completed</div>
+    <div class="level-list" id="levelList"><!-- populated by JS --></div>
+  </div>
+
+  <!-- RIGHT: main question area -->
+  <div class="card main-panel" id="mainPanel">
+    <div style="text-align:center; padding:80px 0; font-family: var(--mono); color: var(--text-1);">
+      <span class="spin" style="width:20px;height:20px;"></span><br/><br/>Loading competition...
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="/js/player.js"></script>
+</body>
+</html>
